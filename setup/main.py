@@ -6,6 +6,7 @@ import numpy as np
 import math
 import pyrr
 import openmesh as om
+import json
 from PIL import Image #, ImageDraw, ImageOps
 
 def load_texture(i, path, nearest=False, repeat_x_edge=False):
@@ -125,10 +126,10 @@ def main():
     ### SET SHADER PARAMETERS ##################################################
 
     # Set tree log properties
-    rmin = 9.0015 # minimum radius of tree log in centimeters
-    rmax = 16.5125 # maximum radius of tree log in centimeters
-    hmax = 455.0 # height of tree log in centimeters
-    knum = 115 # number of knots of tree log
+    f = open(parent_path+'//tree_geo_maps//map_params.json')
+    rmin, rmax, hmax, knum = json.load(f)
+    f.close()
+    print(rmin, rmax, hmax, knum)
 
     rminLoc = glGetUniformLocation(shader, "rmin")
     glUniform1f(rminLoc, rmin)

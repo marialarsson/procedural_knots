@@ -219,8 +219,8 @@ void main()
 
     // GLOBAL 3D TEXTURE COORDINATES
     float Px = outTexCoords.x;
-    float Py = outTexCoords.y + 0.23;                                 // offsetting texture coordinates in y-direction to make center of tree visible
-    float Pz_p = outTexCoords.z + mod(0.25*time,0.1*hmax);            // animating z to show how the texture changes
+    float Py = outTexCoords.y + 0.18;                                 // offsetting texture coordinates in y-direction to make center of tree visible
+    float Pz_p = outTexCoords.z + mod(1.25*time,zrat);            // animating z to show how the texture changes
     float Pz_m = map(Pz_p,0.0,zrat,0.0,1.0);                          // mapped to tree height, i.e. range 0.0-1.0
 
     // STEM GEOMETRY
@@ -266,10 +266,10 @@ void main()
       vec3 ksm = vec3( texture2D(      KnotStateMap,    kmt ) );
 
       // Get pseudo-nearest point (S_b) on branch skeleton
-      float omega_b = map(kom.r,0.0,1.0,0.0,2*PI) + map(kom.g-kom.b,0.0,1.0,0.0,0.5*PI);
+      float omega_b = map(kom.r,0.0,1.0,0.0,2*PI) + map(-kom.g+kom.b,0.0,1.0,0.0,0.5*PI);
       float bx = d_s*cos(omega_b);
       float by = d_s*sin(omega_b);
-      float bz = map(khm.r, 0.0, 1.0, 0.0, zrat) + khm.g - khm.b;
+      float bz = map(khm.r, 0.0, 1.0, 0.0, zrat) - khm.g + khm.b;
       vec3 S_b = vec3(bx,by,bz);
 
       // Caclculate distance, and proceed if within range
@@ -287,7 +287,8 @@ void main()
         float beta_01 = map(BETA[cnt], 0.0, 2*PI, 0.0, 1.0);
         float seed = float(i)/N;
         float noise_value = combined_pnoises(beta_01, d_s, vec3(1.0, 1.0, 0.1), vec3(2.5, 3.0, 0.1), vec3(6.0, 7.0, 0.1), seed);
-        T_b[cnt] = (d_b/0.2) * (1.0+noise_value); //0.2 is an arbitrary parameter for the thickness/speed of growth of the knot
+        float r_b = 0.2 - 0.1*sqrt(d_s) + 0.1*noise_value; //0.2 is an arbitrary parameter for the thickness/speed of growth of the knot
+        T_b[cnt] = (d_b/r_b);
         cnt+=1;
 
         // Make smooth edge of distance range
@@ -395,8 +396,8 @@ void main()
 
     // COLOR. PAPER Section 4.3
     vec3 texColor = vec3(texture2D(ColorMap, vec2(t,0.5)));
-    vec3 knotColor = vec3(0.25,0.25,0.2); //arbitrary color
-    float m = 12;
+    vec3 knotColor = vec3(0.20,0.20,0.15); //arbitrary color
+    float m = 14;
     float g = 1/pow(clamp(1.2*t_b_min-t_s,0.001,1.0)+1.0,m);
     texColor -= g*knotColor; //darken knot (alive and dead)
     texColor -= g*clamp(3*dead_color_factor, 0.0, 0.5)*knotColor; //furhter darken dead knot
