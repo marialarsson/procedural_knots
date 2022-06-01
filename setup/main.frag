@@ -220,7 +220,7 @@ void main()
     // GLOBAL 3D TEXTURE COORDINATES
     float Px = outTexCoords.x;
     float Py = outTexCoords.y + 0.18;                                 // offsetting texture coordinates in y-direction to make center of tree visible
-    float Pz_p = outTexCoords.z + mod(1.25*time,zrat);            // animating z to show how the texture changes
+    float Pz_p = outTexCoords.z + mod(0.25*time,zrat);            // animating z to show how the texture changes
     float Pz_m = map(Pz_p,0.0,zrat,0.0,1.0);                          // mapped to tree height, i.e. range 0.0-1.0
 
     // STEM GEOMETRY
