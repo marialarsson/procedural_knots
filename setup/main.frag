@@ -144,6 +144,16 @@ float pnoise(vec2 P, vec2 rep, float seed){
     return 2.3 * n_xy;
   }
 
+float combined_pnoises(float a, float b, vec3 v0, vec3 v1, vec3 v2, float seed){
+  vec2 vec_0 = vec2(v0.x*a,v0.y*b);
+  vec2 vec_1 = vec2(v1.x*a,v1.y*b);
+  vec2 vec_2 = vec2(v2.x*a,v2.y*b);
+  vec2 per_0 = vec2(v0.x,v0.y);
+  vec2 per_1 = vec2(v1.x,v1.y);
+  vec2 per_2 = vec2(v2.x,v2.y);
+  return v0.z*pnoise(vec_0,per_0,seed) + v1.z*pnoise(vec_1,per_1,seed) + v2.z*pnoise(vec_2,per_2,seed);
+  }
+
 float power_smooth_min( float a, float b, float k ){
     a = pow( a, k );
     b = pow( b, k );
@@ -209,34 +219,34 @@ void main()
 
     // GLOBAL 3D TEXTURE COORDINATES
     float Px = outTexCoords.x;
-    float Py = outTexCoords.y + 0.23; //offsetting texture coordinates in y-direction to make center of tree visible
-    float Pz_p = outTexCoords.z + mod(0.25*time,0.1*hmax); //animating z to show how the texture changes
-    float Pz_m = map(Pz_p,0.0,zrat,0.0,1.0); //mapped to tree height, i.e. range 0.0-1.0
+    float Py = outTexCoords.y + 0.23;                                 // offsetting texture coordinates in y-direction to make center of tree visible
+    float Pz_p = outTexCoords.z + mod(0.25*time,0.1*hmax);            // animating z to show how the texture changes
+    float Pz_m = map(Pz_p,0.0,zrat,0.0,1.0);                          // mapped to tree height, i.e. range 0.0-1.0
 
     // STEM GEOMETRY
-    vec3 prm = vec3(textureBicubic(PithRadiusMap,vec2(0.5,Pz_m))); // sampling pith_radius_map to get pith point offset at current height
+    vec3 prm = vec3(textureBicubic(PithRadiusMap,vec2(0.5,Pz_m)));    // PAPER Section 4.4.1. Sampling pith_radius_map to get pith point offset at current height
     Px = Px-map(prm.x,0.0,1.0,-0.5,0.5);
     Py = Py-map(prm.y,0.0,1.0,-0.5,0.5);
-    vec3 S_s = vec3(0.0,0.0,Pz_p); // pseudo-closest point on stem skeleton
+    vec3 S_s = vec3(0.0,0.0,Pz_p);                                    // pseudo-closest point on stem skeleton
     vec3 P = vec3(Px,Py,Pz_p);
-    float omega = map( mod( atan(Px,Py)+2*PI, 2*PI), 0, 2*PI, 0, 1.0); //rotation of P around vertical stem axis
-    prm = vec3( textureBicubic(PithRadiusMap, vec2(omega,Pz_m) ) ); // sampling pith_radius_map to get radius (equivalent to speed of growth)
-    float r_s = map(prm.b, 0.0, 1.0, 1.0, rmax/rmin); // local max radius of stem
-    float d_s = distance(S_s,P); // horizontal distance to pith
-    float t_s = d_s/r_s; // time value for stem
+    float omega = map( mod( atan(Px,Py)+2*PI, 2*PI), 0, 2*PI, 0, 1.0);// rotation of P around vertical stem axis
+    prm = vec3( textureBicubic(PithRadiusMap, vec2(omega,Pz_m) ) );   // PAPER Section 4.4.1. Sampling pith_radius_map to get radius (equivalent to speed of growth)
+    float r_s = map(prm.b, 0.0, 1.0, 1.0, rmax/rmin);                 // local max radius of stem
+    float d_s = distance(S_s,P);                                      // horizontal distance to pith
+    float t_s = d_s/r_s;                                              // PAPER Equation 1. Calculate time value for stem
 
     // Define relevant distance range for knots
     float dist_range_0 = range_d0 + d_s*range_k0;
     float dist_range_1 = range_d1 + d_s*range_k1;
 
     // KNOT GEOMETRY
-    int n = 20; // max number of considred knots
     // initiate knot variables
-    float D_b[20]; // distances to from P to branch skeleton points S_b
-    float T_b[20]; // time values of knots
-    float T_death[20]; // time of death of knot
-    float BETA[20]; // rotation of P around branch skeleton axis
-    int IND[20]; // knot index
+    int n = 20;         // max number of considred knots
+    float D_b[20];      // distances to from P to branch skeleton points S_b
+    float T_b[20];      // time values of knots
+    float T_death[20];  // time of death values of knots
+    float BETA[20];     // orientations of P around knot axes
+    int IND[20];        // knot indices
     for(int i=0; i<n; i++) {
       D_b[i]=9.0;
       T_b[i]=9.0;
@@ -245,12 +255,12 @@ void main()
       IND[i]=0;
     }
 
-    // Get up to n knots to be considred (within distance range)
+    // Make list of up to n knots to be considred (knots within distance range)
     int cnt = 0;
     for(int i=0; i<N; i++) {
 
-      // Sample knot maps
-      vec2 kmt = vec2( d_s, (i+0.5) / N ); //knots map texture coordinate. x: distance from S_s (stem center point), y: knot index ratio
+      // Sample knot maps. PAPER Section 4.4.2
+      vec2 kmt = vec2( d_s, (i+0.5) / N );  //knots map texture coordinate. x: distance from S_s (stem center point), y: knot index ratio
       vec3 khm = vec3( textureBicubic( KnotHeightMap,   kmt ) );
       vec3 kom = vec3( textureBicubic( KnotOrientMap,   kmt ) );
       vec3 ksm = vec3( texture2D(      KnotStateMap,    kmt ) );
@@ -262,11 +272,12 @@ void main()
       float bz = map(khm.r, 0.0, 1.0, 0.0, zrat) + khm.g - khm.b;
       vec3 S_b = vec3(bx,by,bz);
 
-      // Caclculate distance and proceed if within range
+      // Caclculate distance, and proceed if within range
       float d_b = distance(S_b,P);
       if (d_b<dist_range_1){ //the knot is within the upper bounds of the range
+
+        D_b[cnt] = d_b;           //distance from texture point to pseudo-nearest branch skeleton point
         T_death[cnt] = ksm.g/r_s; //time knot died
-        D_b[cnt] = d_b; //distance from texture point to pseudo-nearest branch skeleton point
 
         // Caclculate beta - angle around knot axis
         vec3 beta_vec = P-S_b;
@@ -274,29 +285,24 @@ void main()
 
         // Create noise for knot radius r_b
         float beta_01 = map(BETA[cnt], 0.0, 2*PI, 0.0, 1.0);
-        vec2 vec_0 = vec2(beta_01,1*d_s);
-        vec2 per_0 = vec2(1.0,1.0);
-        vec2 vec_1 = vec2(2*beta_01,3*d_s);
-        vec2 per_1 = vec2(2.0,1.0);
-        vec2 vec_2 = vec2(5*beta_01,5*d_s);
-        vec2 per_2 = vec2(5.0,3.0);
-        float noise_num = 0.2*pnoise(vec_0, per_0, float(i)/N) + 0.1*pnoise(vec_1, per_1, float(i)/N) + 0.1*pnoise(vec_2, per_2, float(i)/N);
-
-        // Calcualte time value for knot
-        T_b[cnt] = (d_b/0.2) * (1.0+noise_num); //0.2 is an arbitrary parameter for the thickness/speed of growth of the knot
+        float seed = float(i)/N;
+        float noise_value = combined_pnoises(beta_01, d_s, vec3(1.0, 1.0, 0.1), vec3(2.5, 3.0, 0.1), vec3(6.0, 7.0, 0.1), seed);
+        T_b[cnt] = (d_b/0.2) * (1.0+noise_value); //0.2 is an arbitrary parameter for the thickness/speed of growth of the knot
         cnt+=1;
-        // Make smooth edge
+
+        // Make smooth edge of distance range
         if (d_b>dist_range_0){
           float prog = (d_b - dist_range_0)/(dist_range_1-dist_range_0);
           T_b[cnt] = mix(T_b[cnt], 9.0, prog);
         }
-        if (cnt>=n){break;} //max n knots considered
+
+        if (cnt>=n){break;} //max n knots considered at one point
       }
     }
 
     // SMOOTH MERGE MINIMUM
-    float t = 9.0; //initiate combined time value
-    float t_b_min = 9.0; //initiate minimum of all knot time values
+    float t = 9.0;        //initiate combined time value
+    float t_b_min = 9.0;  //initiate minimum of all knot time values
 
     //k-parameters of smoothness of min union
     float k_s = 1.5;
@@ -320,27 +326,27 @@ void main()
       DELTA[i]=0;
       if (T_b[i]<9.0){
 
-        // Calculate adaptive k-value
+        // Calculate adaptive k-value. PAPER Section 4.2.1
         float t_Delta = t_s-T_b[i];
         float k = 0.5*(k_b-k_s)*t_Delta/(0.3+abs(t_Delta))+0.5*(k_b+k_s);
 
-        // Smooth minimum
+        // Smooth minimum. PAPER Equation 2
         t = power_smooth_min(t_s,T_b[i],k);
 
-        // Amount of smoothing
+        // Amount of smoothing. PAPER Equation 3
         DELTA[i] = t - min(t_s,T_b[i]);
 
-        // If after knot died
+        // If after knot died. Paper Section 4.2.2
         if (t>T_death[i]) {
 
           float t_after_death = abs(t_s-T_death[i]);
 
-          // Stop expansion in thickness
+          // Stop expansion in thickness. Paper Section 4.2.2
           T_b[i] += t_after_death;
           float t = power_smooth_min(t_s,T_b[i],k+f4*t_after_death);
           float delta =  t - min(t_s,T_b[i]);
 
-          // Reduce and invert smoothing
+          // Reduce and invert smoothing. Paper Section 4.2.2
           float td2 = f3*t_after_death-1.0;
           float f_range = f2-f1;
           float f = 1.0 - 0.5*f_range*( td2/(0.3+abs(td2)) ) + f1 + 0.5*f_range ;
@@ -361,16 +367,12 @@ void main()
             dead_color_factor = t_s-T_death[i];
         }
 
-        if (T_b[i]<T_death[i]){ //dead knot outline
-          //create noise for thickness of outline
+        if (T_b[i]<T_death[i]){ // Dead knot outline
           float beta_01 = map(BETA[i],0.0,2*PI,0.0,1.0);
-          vec2 vec_1 = vec2(2*beta_01,1*d_s);
-          vec2 per_1 = vec2(2.0,1.0);
-          vec2 vec_2 = vec2(23*beta_01,5*d_s);
-          vec2 per_2 = vec2(23.0,5.0);
-          float noise_num = 0.005*pnoise(vec_1, per_1, float(IND[i])/N) + 0.010*pnoise(vec_2, per_2, float(IND[i])/N);
-          dead_outline_factor = dead_outline_factor+noise_num;
-          if( abs(T_death[i]-t)<dead_outline_factor){
+          float seed = float(IND[i])/N;
+          float noise_value = combined_pnoises(beta_01, d_s, vec3(2.0, 1.0, 0.005), vec3(5.0, 2.0, 0.008), vec3(23.0, 5.0, 0.010), seed);
+          dead_outline_thickness+=noise_value;
+          if( abs(T_death[i]-t)<dead_outline_thickness){
             dead_outline_factor = 0.65;
           }
         }
@@ -386,12 +388,12 @@ void main()
       delta = smoothstep(0.0,1.0,delta);
       DELTA[i] -= DELTA[i]*delta;
     }
-    // Apply smoothing (min + delta)
+    // Apply smoothing (min + delta). PAPER Equation 6
     float delta_sum = sum(DELTA);
     float t_min = min(t_s, min_all(T_b));
     t = t_min + delta_sum;
 
-    // COLOR --- Apply wood color map, darken knots, outline dead knots
+    // COLOR. PAPER Section 4.3
     vec3 texColor = vec3(texture2D(ColorMap, vec2(t,0.5)));
     vec3 knotColor = vec3(0.25,0.25,0.2); //arbitrary color
     float m = 12;
