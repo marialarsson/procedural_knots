@@ -24,11 +24,11 @@ $ python setup/main.py
 ```
 
 ### Understanding the Code
-The procedure is located in the fragment shader ([setup/main.frag](setup/main.frag)). The process is explained in the methods section of the paper ([PDF](http://ma-la.com/procedural_knots/Procedural_Knots_2022.pdf)). To facilitate the understanding of the code, we refer to the paper in the comments, e.g. ```// PAPER Equation 5``` and ```// PAPER Section 4.2.2```.
+The procedure is located in the fragment shader ([setup/main.frag](setup/main.frag)). The process is explained in the methods section of the paper ([PDF](http://ma-la.com/procedural_knots/Procedural_Knots_2022.pdf)). To facilitate the understanding of the code, we made some references to the paper in the comments, e.g. ```// PAPER Equation 5``` and ```// PAPER Section 4.2.2```.
 
 
 ### Feedback
-If you experience any problems or have some suggestions for improvements, please share under [Issues](https://github.com/marialarsson/procedural_knots/issues).
+If you experience any problems or have some suggestions for improvements, feel free to share under [Issues](https://github.com/marialarsson/procedural_knots/issues).
 
 ## Links
 
