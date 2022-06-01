@@ -1,7 +1,9 @@
-# Procedural Texturing of Solid Wood with Knots
+# Procedural Knots
 
-This is the repository of Procedural Knots - a research project about modeling the annual ring pattern around knots in solid wood - presented at SIGGRAPH 2022.
+This is the repository related to the publication "Procedural Texturing of Solid Wood with Knots," presented at SIGGRAPH 2022.
 It is implemented as a shader program in PyOpenGL and GLSL.
+
+![](img.jpg)
 
 ### Environment
 - Python 3.8.7
