@@ -3,7 +3,7 @@
 This is the repository related to the publication "Procedural Texturing of Solid Wood with Knots," presented at SIGGRAPH 2022.
 It is implemented as a shader program in PyOpenGL and GLSL.
 
-![](img.jpg)
+![](img.jpg | width=300)
 
 ### Environment
 - Python 3.8.7
@@ -18,7 +18,7 @@ $ pip install -r requirements.txt
 ```
 
 ### Run Program
-After installing the necessary packages, run the program:
+After installing the necessary packages, run the program with
 ```
 $ python setup/main.py
 ```
