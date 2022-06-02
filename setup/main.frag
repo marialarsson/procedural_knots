@@ -297,7 +297,9 @@ void main()
           T_b[cnt] = mix(T_b[cnt], 9.0, prog);
         }
 
-        if (cnt>=n){break;} //max n knots considered at one point
+        if (cnt>=n){ //max n knots considered at one point
+          break;
+          }
       }
     }
 

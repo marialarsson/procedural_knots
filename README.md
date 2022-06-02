@@ -1,6 +1,6 @@
 # Procedural Knots
 
-<img src="img.jpg" alt="Procedural Knots" width="300"/>
+<img src="images/img.jpg" alt="Procedural Knots" width="300"/>
 
 This is the repository related to the publication "Procedural Texturing of Solid Wood with Knots" (SIGGRAPH 2022).
 It is implemented as a shader program in PyOpenGL and GLSL.
@@ -20,8 +20,11 @@ $ pip install -r requirements.txt
 ### Run Program
 After installing the necessary packages, run the program with
 ```
-$ python setup/main.py
+$ python SETUP/main.py
 ```
+If everything works properly, a window with a cuboid with an animated knotted wood texture will appear, as in the image below.
+
+<img src="images/output.gif" alt="Procedural Knots" width="300"
 
 ### Understanding the Code
 The procedure is located in the fragment shader ([setup/main.frag](setup/main.frag)). The process is explained in the methods section of the paper ([PDF](http://ma-la.com/procedural_knots/Procedural_Knots_2022.pdf)). To facilitate the understanding of the code, we made some references to the paper in the comments, e.g. ```// PAPER Equation 5``` and ```// PAPER Section 4.2.2```.
