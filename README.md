@@ -24,7 +24,7 @@ $ python SETUP/main.py
 ```
 If everything works properly, a window with a cuboid with an animated knotted wood texture will appear, as in the image below.
 
-<img src="images/output.gif" alt="Procedural Knots" width="300"
+<img src="images/output.gif" alt="Procedural Knots" width="300"/>
 
 ### Understanding the Code
 The procedure is located in the fragment shader ([setup/main.frag](setup/main.frag)). The process is explained in the methods section of the paper ([PDF](http://ma-la.com/procedural_knots/Procedural_Knots_2022.pdf)). To facilitate the understanding of the code, we made some references to the paper in the comments, e.g. ```// PAPER Equation 5``` and ```// PAPER Section 4.2.2```.
