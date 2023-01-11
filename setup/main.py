@@ -5,9 +5,70 @@ import OpenGL.GL.shaders
 import numpy as np
 import math
 import pyrr
-import openmesh as om
+#import openmesh as om
 import json
 from PIL import Image #, ImageDraw, ImageOps
+
+class Mesh():
+    '''
+    Basic mesh class with same member naming as 
+    OpenMesh object.
+    '''
+    def __init__(self):
+        self.m_points = []
+        self.m_vertex_normals = []
+        self.m_face_normals = []
+        self.m_face_vertex_indices = []
+        self.m_texture_coordinates = []
+
+    def points(self):
+        return np.array(self.m_points)
+    def vertex_normals(self):
+        return np.array(self.m_vertex_normals)
+    def face_vertex_indices(self):
+        return np.array(self.m_face_vertex_indices)
+    def texture_coordinates(self):
+        return np.array(self.texture_coordinates)
+
+def read_trimesh(path, vertex_normal = True):
+    '''
+    Basic OBJ importer
+    '''
+    mesh = Mesh()
+
+    with open(path, 'r') as file:
+        for line in file:
+            if line.startswith('v '):
+                tok = line.split()
+                mesh.m_points.append([float(tok[1]), float(tok[2]), float(tok[3])])
+            elif line.startswith('vt'):
+                tok = line.split()
+                mesh.m_texture_coordinates.append([float(tok[1]), float(tok[2])])
+            elif line.startswith('vn'):
+                tok = line.split()
+                mesh.m_vertex_normals.append([float(tok[1]), float(tok[2]), float(tok[3])])
+            elif line.startswith('f '):
+                face = [int(x.split('/')[0]) - 1 for x in line.split()[1:]]
+                face_normals = [int(x.split('/')[2]) - 1 for x in line.split()[1:]]
+
+                mesh.m_face_vertex_indices.append(face)
+                mesh.m_face_normals.append(face_normals)
+
+    # Reorder vertex normals to correspond with face vertex normals
+    # We assume a single normal per vertex
+    reordered_normals = [None] * len(mesh.m_vertex_normals)
+    
+    for i in range(len(mesh.m_face_vertex_indices)):
+        face = mesh.m_face_vertex_indices[i]
+        face_normals = mesh.m_face_normals[i]
+
+        for j in range(len(face)):
+            reordered_normals[face[j]] = mesh.m_vertex_normals[face_normals[j]]
+
+    mesh.m_vertex_normals = reordered_normals
+
+    return mesh
+
 
 def load_texture(i, path, nearest=False, repeat_x_edge=False):
     gltex = [GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3, GL_TEXTURE4, GL_TEXTURE5, GL_TEXTURE6, GL_TEXTURE7]
@@ -53,7 +114,7 @@ def main():
     ### LOAD INPUT 3D MODEL ####################################################
 
     parent_path = os.path.abspath('..')
-    mesh = om.read_trimesh(parent_path+'\\3d_model\\plank.obj', vertex_normal=True)
+    mesh = read_trimesh(parent_path+'\\3d_model\\suzanne.obj', vertex_normal=True)
 
     #Vertices with normals
     point_array = mesh.points()
