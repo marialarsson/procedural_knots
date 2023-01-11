@@ -17,6 +17,7 @@ class Mesh():
     def __init__(self):
         self.m_points = []
         self.m_vertex_normals = []
+        self.m_face_normals = []
         self.m_face_vertex_indices = []
         self.m_texture_coordinates = []
 
@@ -48,7 +49,24 @@ def read_trimesh(path, vertex_normal = True):
                 mesh.m_vertex_normals.append([float(tok[1]), float(tok[2]), float(tok[3])])
             elif line.startswith('f '):
                 face = [int(x.split('/')[0]) - 1 for x in line.split()[1:]]
+                face_normals = [int(x.split('/')[2]) - 1 for x in line.split()[1:]]
+
                 mesh.m_face_vertex_indices.append(face)
+                mesh.m_face_normals.append(face_normals)
+
+    # Reorder vertex normals to correspond with face vertex normals
+    # We assume a single normal per vertex
+    reordered_normals = [None] * len(mesh.m_vertex_normals)
+    
+    for i in range(len(mesh.m_face_vertex_indices)):
+        face = mesh.m_face_vertex_indices[i]
+        face_normals = mesh.m_face_normals[i]
+
+        for j in range(len(face)):
+            reordered_normals[face[j]] = mesh.m_vertex_normals[face_normals[j]]
+
+    mesh.m_vertex_normals = reordered_normals
+
     return mesh
 
 
@@ -96,7 +114,7 @@ def main():
     ### LOAD INPUT 3D MODEL ####################################################
 
     parent_path = os.path.abspath('..')
-    mesh = read_trimesh(parent_path+'\\3d_model\\plank.obj', vertex_normal=True)
+    mesh = read_trimesh(parent_path+'\\3d_model\\suzanne.obj', vertex_normal=True)
 
     #Vertices with normals
     point_array = mesh.points()
