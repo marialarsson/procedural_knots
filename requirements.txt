@@ -3,4 +3,4 @@ numpy>=1.20.3
 Pillow>=8.2.0
 PyOpenGL==3.1.5
 pyrr==0.10.3
-openmesh==1.2.1
+#openmesh==1.2.1
